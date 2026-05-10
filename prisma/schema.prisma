@@ -7,6 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        Int             @id @default(autoincrement())
+  name      String
+  email     String          @unique
+  password  String
+  role      Role            @default(MEMBER)
+  createdAt DateTime        @default(now())
+  projects  ProjectMember[]
+  tasks     Task[]
+}
+
+model Project {
+  id          Int             @id @default(autoincrement())
+  title       String
+  description String?
+  deadline    DateTime?
+  createdAt   DateTime        @default(now())
+  members     ProjectMember[]
+  tasks       Task[]
+}
+
+model ProjectMember {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, projectId])
+}
+
+model Task {
+  id           Int        @id @default(autoincrement())
+  title        String
+  description  String?
+  status       TaskStatus @default(TODO)
+  priority     String?
+  dueDate      DateTime?
+  assignedToId Int
+  projectId    Int
+  createdAt    DateTime   @default(now())
+  assignedTo   User       @relation(fields: [assignedToId], references: [id])
+  project      Project    @relation(fields: [projectId], references: [id])
+}
+
 enum Role {
   ADMIN
   MEMBER
@@ -16,58 +61,4 @@ enum TaskStatus {
   TODO
   IN_PROGRESS
   COMPLETED
-}
-
-model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  password  String
-  role      Role      @default(MEMBER)
-
-  tasks     Task[]
-  projects  ProjectMember[]
-
-  createdAt DateTime  @default(now())
-}
-
-model Project {
-  id          Int              @id @default(autoincrement())
-  title       String
-  description String?
-  deadline    DateTime?
-
-  tasks       Task[]
-  members     ProjectMember[]
-
-  createdAt   DateTime @default(now())
-}
-
-model ProjectMember {
-  id        Int      @id @default(autoincrement())
-
-  userId    Int
-  projectId Int
-
-  user      User     @relation(fields: [userId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
-
-  @@unique([userId, projectId])
-}
-
-model Task {
-  id          Int         @id @default(autoincrement())
-  title       String
-  description String?
-  status      TaskStatus  @default(TODO)
-  priority    String?
-  dueDate     DateTime?
-
-  assignedToId Int
-  projectId    Int
-
-  assignedTo User    @relation(fields: [assignedToId], references: [id])
-  project    Project @relation(fields: [projectId], references: [id])
-
-  createdAt DateTime @default(now())
 }
